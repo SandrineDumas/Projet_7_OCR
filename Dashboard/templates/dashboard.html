@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/bullet.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <!--<script type="text/javascript" src="http://highcharts.com/js/testing.js"></script>-->
+    <script src="/static/mydashboard.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/dashboard.css">
+
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <div id = "container0" >
+        <h3>
+            Numéro de dossier : {{ client_number }}<br>
+        </h3>
+        <h5>
+            Genre : {{ genre }}<br>
+            Age : {{ age }}<br>
+        </h5>
+    </div>
+
+    <form action="{{ url_for('home')}}">
+        <button id="Home" class="btn btn-outline-secondary" >Accueil</button>
+    </form>
+    <form action="{{ url_for('predict')}}" method="post">
+        <button id="PRED" class="btn btn-outline-secondary">Accord prêt</button>
+    </form>
+    <form action="{{ url_for('lime_plot')}}" method="post">
+        <button id="LIME" class="btn btn-outline-secondary" >Détails client</button>
+    </form>
+    <form action="{{ url_for('plot_radar')}}" method="post">
+        <button id="Radar" class="btn btn-outline-secondary" >Comparatif</button>
+    </form>
+    <form action="{{ url_for('histo_plot')}}" method="post">
+        <label id="histo">Détail caractéristique client : </label>
+        <select id="list" name="data_value">
+            <option value="DAYS_BIRTH">Age</option>
+            <option value="EXT_SOURCE_1">Score 1</option>
+            <option value="EXT_SOURCE_2">Score 2</option>
+            <option value="EXT_SOURCE_3">Score 3</option>
+            <option value="DAYS_EMPLOYED">Ancienneté emploi</option>
+            <option value="AMT_INCOME_TOTAL">Revenu annuel</option>
+            <option value="DAYS_ID_PUBLISH">Renouvellement carte d'identité</option>
+            <option value="DAYS_LAST_PHONE_CHANGE">Renouvellement du téléphone</option>
+            <option value="AMT_GOODS_PRICE">Montant de l'achat envisagé</option>
+          </select>
+          <button id="change" class="btn btn-outline-secondary">Valider</button>
+    </form>
+
+
+    {% if OK_pred=='OK'%}
+        <br>
+        <br>
+        <br>
+        <div id = "container5" >
+            <h2>{{ prediction_text }}</h2>
+        </div>
+        <div id = "container1" ></div>
+        <script language = "JavaScript">
+
+             $(document).ready(function() {
+                    var chart = {
+                        inverted: true,
+                        type: 'bullet'
+                                };
+                    var title = {
+                        text: null
+                                 };
+                    var legend = {
+                        enabled: false
+                                 };
+                    var credits = {
+                        enabled: false
+                                 };
+                    var xAxis= [{
+                        type: 'linear',
+                                },{
+                        type: 'datetime',
+                        opposite: true
+                                }];
+                    var yAxis =  {
+                        gridLineWidth: 0,
+                        max : 100,
+                        plotBands: [{
+                                from: 0,
+                                to: 45,
+                                color: '#f00'
+                                    }, {
+                                from: 45,
+                                to: 55,
+                                color: '#ff0'
+                                    }, {
+                                from: 55,
+                                to: 100,
+                                color: '#0f0'
+                                    }],
+                        labels: {
+                                format: '{value}'
+                                },
+                        title: null
+                                };
+                    var series = [{
+                        name: 'Client',
+                        labels: {
+                            format: '{value}'
+                                },
+                        data: [{
+                            y: {{pred}},
+                            target: 55,
+                                }]
+                            }];
+                    var plotOptions = {
+                        series: {
+                            pointPadding: 0.25,
+                            borderWidth: 0,
+                            color: '#000',
+                            targetOptions: {
+                                color: '#000',
+                                width: '400%'
+                                }
+                            }
+                        };
+
+                    var json = {};
+                    json.chart = chart;
+                    json.title = title;
+                    json.legend = legend;
+                    json.credits = credits;
+                    json.xAxis = xAxis;
+                    json.yAxis = yAxis;
+                    json.series = series;
+                    json.plotOptions = plotOptions;
+
+                    $('#container1').highcharts(json);
+                        });
+        </script>
+        <br>
+        <div id = "container0" >
+            <h6>
+                Si le score se situe entre : <br /><br />
+            <ul>
+                <li>0 - 45 : prêt refusé</li>
+
+                <li> 45 - 55 : prêt refusé, dossier à revalider</li>
+                <li> 55 - 65 : prêt accordé</li>
+            </ul>
+            </h6>
+        </div>
+    {% endif %}
+
+
+    {% if exp %}
+        <div id = "container0" >
+        <h6 align="top" >
+        <br />
+                A gauche : Probabilité pour le client d'avoir son prêt accordé ou refusé.<br /><br />
+                Au centre : Caractéristiques du dossier client qui donne du poids à l'accord ou au refus du prêt.<br /><br />
+                A droite : Caractéristiques du dossier client qui donne du poids à l'accord ou au refus du prêt, avec une note de pondération.<br /><br />
+        </h6>
+        </div>
+            <div class="container">
+                {{ exp|safe }}
+            </div>
+    {% endif %}
+
+    {% if OK_radar=='OK'%}
+        <div id = "container0" >
+        <h6 align="top" >
+             <br />
+                Radar de gauche : Les cinq caractéristiques principales qui expliquent le score du client (issues de Détails client).<br /><br />
+                Radar de droite : Les cinq caractéristiques communes à l'ensemble des clients.<br /><br />
+        </h6>
+        </div>
+
+        <div id="container_1" class="chart"></div>
+        <div id="container_2" class="chart"></div>
+
+        <script src="/static/mydashboard.js"></script>
+        <link rel="stylesheet" type="text/css" href="/static/dashboard.css">
+    {% endif %}
+
+
+
+    {% if OK_histo=='OK'%}
+        <div id = "container0" >
+        <h6>
+            <br />
+            Sur le graphique :<br /><br />
+            <ul>
+            <li> en rouge : répartition du nombre de clients avec prêt refusé</li>
+            <li> en vert : répartition du nombre de clients avec prêt accordé</li>
+            <li> la ligne noire représente le client sélectionné</li>
+            </ul>
+         </h6>
+        </div>
+
+        <div id = "container4" ></div>
+        <script language = "JavaScript">
+
+             $(document).ready(function() {
+                    var title = {
+                        text: '{{data_histo_titre}}'
+                         };
+                    var xAxis= [{
+                        title: { text: 'Valeur' },
+                        alignTicks: false,
+                        visible: false,
+                               }, {
+                        title: { text: 'Valeur' },
+                        alignTicks: false,
+                        opposite: true,
+                        plotLines : [{
+                        color: '#000000',
+                        value: {{data_histo_client}},
+                        width: 5,
+                        zIndex:4,
+                        label: {text: 'client' + '- {{info_client}}'}
+                                    }],
+                                    }
+                                    ];
+                   var yAxis =  [{
+                        title: { text: 'Histogram' },
+                                visible: false,
+                            }, {
+                        title: { text: 'Nombre de client' },
+                                opposite: true
+                            }];
+                   var  plotOptions = {
+                        histogram: {
+                            accessibility: {
+                                point: {
+                                    valueDescriptionFormat: '{index}. {point.x:.3f} to {point.x2:.3f}, {point.y}.'
+                                }
+                            }
+                        }
+                            };
+                   var series = [{
+                        name: 'Clients - prêt accordé',
+                        type: 'histogram',
+                        xAxis: 1,
+                        yAxis: 1,
+                        color:'#0FE248',
+                        opacity: 0.8,
+                        baseSeries: 's1',
+                        zIndex: -1
+                            }, {
+                        name: 'Clients - prêt accordé',
+                        type: 'scatter',
+                        visible: false,
+                        showInLegend: false,
+                        data: {{data_histo_yes}},
+                        id: 's1',
+                        marker: {
+                            radius: 1.5
+                                 }
+                                 },{
+                        name: 'Clients - prêt refusé',
+                        type: 'histogram',
+                        xAxis: 1,
+                        yAxis: 1,
+                        color:'#E61B4D',
+                        opacity: 0.8,
+                        baseSeries: 's2',
+                        zIndex: -1
+                            },{
+                        name: 'Clients - prêt refusé',
+                        type: 'scatter',
+                        visible: false,
+                        showInLegend: false,
+                        data: {{data_histo_no}},
+                        id: 's2',
+                        marker: {
+                            radius: 1.5
+                                 },
+                         }];
+
+                    var json = {};
+
+                    json.title = title;
+                    json.xAxis = xAxis;
+                    json.yAxis = yAxis;
+                    json.plotOptions = plotOptions;
+                    json.series = series;
+
+
+                    $('#container4').highcharts(json);
+                 });
+        </script>
+    {% endif %}
+
+</body>
+</html>
