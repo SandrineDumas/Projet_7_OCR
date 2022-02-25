@@ -65,8 +65,10 @@ def dashboard():
 @app.route('/results/', methods=['POST'])
 def predict():
     global score
+    age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
     index_df = df_results.loc[0, "index_df"]
     numero_client = df_results.loc[0, "client"]
+    genre = numero_client = df_results.loc[0, "genre"]
     print(index_df)
     prediction = model.predict_proba(X_test)[index_df][0]
 
@@ -91,6 +93,7 @@ def predict():
 def lime_data():
     index_df = df_results.loc[0, "index_df"]
     numero_client = df_results.loc[0, "client"]
+    genre = numero_client = df_results.loc[0, "genre"]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
