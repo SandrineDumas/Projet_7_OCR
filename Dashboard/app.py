@@ -36,17 +36,12 @@ def home():
 
 @app.route('/dashboard/', methods=['POST'])
 def dashboard():
-    global numero_client, age, genre
-    global index_df
+    global numero_client, age, genre, index_df
 
     numero_client = request.form.get("Numéro de dossier")
     numero_client = int(numero_client)
 
     index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
-
-    print('dashboard')
-    print(numero_client)
-    print(index_df)
 
     age = int(X_test.loc[index_df, 'DAYS_BIRTH']/(-365))
     code_genre = X_test.loc[index_df, 'CODE_GENDER']
@@ -63,13 +58,9 @@ def dashboard():
 
 @app.route('/results/', methods=['POST'])
 def predict():
+    global numero_client, age, genre, index_df
     global score
     prediction = model.predict_proba(X_test)[index_df][0]
-
-    print('predict')
-    print(numero_client)
-    print(index_df)
-
 
     if prediction >= 0.55:
         score = "Accordé"
@@ -88,6 +79,7 @@ def predict():
 
 
 def lime_data():
+    global numero_client, age, genre, index_df
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -102,6 +94,7 @@ def lime_data():
 
 @app.route('/LIME/', methods=['POST'])
 def lime_plot():
+    global numero_client, age, genre, index_df
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     html_data = explanation.as_html()
 
@@ -113,12 +106,9 @@ def lime_plot():
 
 @app.route('/API/radar/')
 def def_radar():
+    global numero_client, age, genre, index_df
     global data_radar
     data_radar, liste_radar_specifique = lime_data()
-
-    print('def_radar')
-    print(numero_client)
-    print(index_df)
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
@@ -170,6 +160,7 @@ def def_radar():
 
 @app.route('/RADAR/', methods=['POST'])
 def plot_radar():
+    global numero_client, age, genre
     return render_template('dashboard.html',
                            OK_radar='OK',
                            client_number=numero_client,
@@ -179,6 +170,7 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
+    global numero_client, age, genre, index_df
     val = request.form.get("data_value")
     titre = ""
     unite = ""
