@@ -21,7 +21,7 @@
 </head>
 
 <body>
-    <div id = "container0" >
+    <div id = "container01" >
         <h3>
             Numéro de dossier : {{ client_number }}<br>
         </h3>
@@ -147,7 +147,7 @@
                         });
         </script>
         <br>
-        <div class = "container0" >
+        <div id = "container02" >
             <h6>
                 Si le score se situe entre : <br /><br />
             <ul>
@@ -162,7 +162,7 @@
 
 
     {% if exp %}
-        <div class = "container0" >
+        <div id = "container03" >
         <h6 align="top" >
         <br />
                 A gauche : Probabilité pour le client d'avoir son prêt accordé ou refusé.<br /><br />
@@ -176,7 +176,7 @@
     {% endif %}
 
     {% if OK_radar=='OK'%}
-        <div class = "container0" >
+        <div id = "container04" >
         <h6 align="top" >
              <br />
                 Radar de gauche : Les cinq caractéristiques principales qui expliquent le score du client (issues de Détails client).<br /><br />
@@ -194,7 +194,7 @@
 
 
     {% if OK_histo=='OK'%}
-        <div class = "container0" >
+        <div class = "container05" >
         <h6>
             <br />
             Sur le graphique :<br /><br />

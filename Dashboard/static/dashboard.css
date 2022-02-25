@@ -68,6 +68,16 @@ body {
         vertical-align: bottom;
       }
 
+.container0 {
+        height : 850px;
+        width : 650px;
+        margin: 5px auto 0 auto;
+        padding : 0px;
+        background-color: #FFF;
+        display: inline-block;
+        position: relative;
+        left: 20px;
+      }
 
 h1, h2, h3, h4, h5, h6
 {
@@ -75,10 +85,12 @@ h1, h2, h3, h4, h5, h6
     color: #4B4848;
 }
 
-#container0 {
+#container01, #container02, #container03, #container04, #container05 {
     max-width: 1000px;
     height: 100px;
     margin: 20px;
+    position: relative;
+    left: 20px;
 }
 
 #container1 {
@@ -104,22 +116,6 @@ h1, h2, h3, h4, h5, h6
     height: 50px;
     margin: 20px;
 }
-
-
-
-@media (min-width: 1200px) {
-        #actu{
-          width:1115px;
-          height: inherit;
-        }
-      }
-
-      #container_1,  {
-        width : 550px;
-        height : 310px;
-        display: inline-block;
-        vertical-align: top;
-      }
 
 form {
     display: inline;

@@ -22,10 +22,6 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
-numero_client = 123456
-index_df = 1234
-age = 12
-genre = 3
 
 @app.route('/')
 def home():
@@ -38,6 +34,11 @@ def home():
 def dashboard():
     global numero_client, age, genre
     global index_df
+
+    numero_client = 123456
+    index_df = 1234
+    age = 12
+    genre = 3
 
     numero_client = request.form.get("Numéro de dossier")
     numero_client = int(numero_client)
