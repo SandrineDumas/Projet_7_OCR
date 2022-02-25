@@ -22,8 +22,10 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
-global numero_client, age, genre
-global index_df, score
+numero_client = 123456
+index_df = 1234
+age = 12
+genre = 3
 
 @app.route('/')
 def home():
@@ -37,15 +39,14 @@ def dashboard():
     global numero_client, age, genre
     global index_df
 
-    numero_client = 123456
-    index_df = 1234
-    age = 12
-    genre = 3
-
     numero_client = request.form.get("Numéro de dossier")
     numero_client = int(numero_client)
 
     index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
+
+    print('dashboard')
+    print(numero_client)
+    print(index_df)
 
     age = int(X_test.loc[index_df, 'DAYS_BIRTH']/(-365))
     code_genre = X_test.loc[index_df, 'CODE_GENDER']
@@ -64,6 +65,11 @@ def dashboard():
 def predict():
     global score
     prediction = model.predict_proba(X_test)[index_df][0]
+
+    print('predict')
+    print(numero_client)
+    print(index_df)
+
 
     if prediction >= 0.55:
         score = "Accordé"
@@ -109,6 +115,10 @@ def lime_plot():
 def def_radar():
     global data_radar
     data_radar, liste_radar_specifique = lime_data()
+
+    print('def_radar')
+    print(numero_client)
+    print(index_df)
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
