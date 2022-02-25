@@ -22,6 +22,8 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
+global numero_client, age, genre
+global index_df, score
 
 @app.route('/')
 def home():
@@ -79,7 +81,7 @@ def predict():
                            pred=round(prediction * 100, 2))
 
 
-def lime_data(index_df):
+def lime_data():
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -106,7 +108,7 @@ def lime_plot():
 @app.route('/API/radar/')
 def def_radar():
     global data_radar
-    data_radar, liste_radar_specifique = lime_data(index_df)
+    data_radar, liste_radar_specifique = lime_data()
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
@@ -137,7 +139,6 @@ def def_radar():
 
     data_radar_specifique_inter = {}
     data_radar_general_inter = {}
-    # data_radar_for_json = []
 
     value_radar_specifique = target_radar.loc[:, liste_radar_specifique].values.tolist()
     value_radar_general = target_radar.loc[:, liste_radar_general].values.tolist()
