@@ -22,10 +22,10 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
-numero_client = 123456
-index_df = 1234
-age = 12
-genre = 3
+#numero_client = 123456
+#index_df = 1234
+#age = 12
+#genre = 3
 
 @app.route('/')
 def home():
