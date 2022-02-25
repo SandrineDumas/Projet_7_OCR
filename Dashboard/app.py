@@ -180,6 +180,7 @@ def plot_radar():
 def histo_plot():
     index_df = df_results.loc[0, "index_df"]
     numero_client = df_results.loc[0, "client"]
+    genre = numero_client = df_results.loc[0, "genre"]
     age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
     val = request.form.get("data_value")
     titre = ""
