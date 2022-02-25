@@ -65,8 +65,9 @@ def dashboard():
 @app.route('/results/', methods=['POST'])
 def predict():
     global score
-    age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
+
     index_df = df_results.loc[0, "index_df"]
+    age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
     numero_client = df_results.loc[0, "client"]
     genre = numero_client = df_results.loc[0, "genre"]
     print(index_df)
