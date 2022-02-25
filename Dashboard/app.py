@@ -11,6 +11,8 @@ app = Flask(__name__)
 model = pickle.load(open('data/best_pipes.pkl', 'rb'))
 model_lime = pickle.load(open('data/model_lime.pkl', 'rb'))
 
+df_results = pd.read_csv("data/Results.csv")
+
 pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb'))
 X_test = pickle.load(open('data/X_test.pkl', 'rb'))
 y_test = pickle.load(open('data/y_test.pkl', 'rb'))
@@ -23,10 +25,6 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
-#numero_client = 123456
-#index_df = 1234
-#age = 12
-#genre = 3
 
 @app.route('/')
 def home():
@@ -47,8 +45,11 @@ def dashboard():
     age = int(X_test.loc[index_df, 'DAYS_BIRTH']/(-365))
     code_genre = X_test.loc[index_df, 'CODE_GENDER']
 
-    numero_client = numero_client
-    index_df = index_df
+    df_results.loc[0,"client"] = numero_client
+    df_results.loc[0, "index_df"] = index_df
+
+    print('Dashboard')
+    print(index_df)
 
     if code_genre == 0:
         genre = "Homme"
@@ -64,8 +65,11 @@ def dashboard():
 @app.route('/results/', methods=['POST'])
 def predict():
     global score
-    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
+    index_df = df_results.loc[0, "index_df"]
+    print(index_df)
     prediction = model.predict_proba(X_test)[index_df][0]
+
+    #prediction = model.predict_proba(X_test)[index_df][0]
 
     if prediction >= 0.55:
         score = "Accordé"
@@ -84,7 +88,6 @@ def predict():
 
 
 def lime_data():
-    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -99,8 +102,6 @@ def lime_data():
 
 @app.route('/LIME/', methods=['POST'])
 def lime_plot():
-    #global numero_client, age, genre, index_df
-    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     html_data = explanation.as_html()
 
@@ -174,6 +175,7 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
+    print(df_results.loc[0, 'TARGET'])
     val = request.form.get("data_value")
     titre = ""
     unite = ""
