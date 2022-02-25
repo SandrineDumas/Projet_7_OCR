@@ -176,6 +176,7 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
+    index_df = df_results.loc[0, "index_df"]
     val = request.form.get("data_value")
     titre = ""
     unite = ""
