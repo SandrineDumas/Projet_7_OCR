@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template, url_for
+from flask import g
 import pickle
 import dill
 import pandas as pd
@@ -45,6 +46,10 @@ def dashboard():
 
     age = int(X_test.loc[index_df, 'DAYS_BIRTH']/(-365))
     code_genre = X_test.loc[index_df, 'CODE_GENDER']
+
+    numero_client = numero_client
+    index_df = index_df
+
     if code_genre == 0:
         genre = "Homme"
     else:
@@ -58,8 +63,8 @@ def dashboard():
 
 @app.route('/results/', methods=['POST'])
 def predict():
-    global numero_client, age, genre, index_df
     global score
+    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
     prediction = model.predict_proba(X_test)[index_df][0]
 
     if prediction >= 0.55:
@@ -79,7 +84,7 @@ def predict():
 
 
 def lime_data():
-    global numero_client, age, genre, index_df
+    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -94,7 +99,8 @@ def lime_data():
 
 @app.route('/LIME/', methods=['POST'])
 def lime_plot():
-    global numero_client, age, genre, index_df
+    #global numero_client, age, genre, index_df
+    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     html_data = explanation.as_html()
 
@@ -106,7 +112,6 @@ def lime_plot():
 
 @app.route('/API/radar/')
 def def_radar():
-    global numero_client, age, genre, index_df
     global data_radar
     data_radar, liste_radar_specifique = lime_data()
 
@@ -160,7 +165,6 @@ def def_radar():
 
 @app.route('/RADAR/', methods=['POST'])
 def plot_radar():
-    global numero_client, age, genre
     return render_template('dashboard.html',
                            OK_radar='OK',
                            client_number=numero_client,
@@ -170,7 +174,6 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
-    global numero_client, age, genre, index_df
     val = request.form.get("data_value")
     titre = ""
     unite = ""
