@@ -66,6 +66,7 @@ def dashboard():
 def predict():
     global score
     index_df = df_results.loc[0, "index_df"]
+    numero_client = df_results.loc[0, "client"]
     print(index_df)
     prediction = model.predict_proba(X_test)[index_df][0]
 
@@ -89,6 +90,7 @@ def predict():
 
 def lime_data():
     index_df = df_results.loc[0, "index_df"]
+    numero_client = df_results.loc[0, "client"]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -177,6 +179,7 @@ def plot_radar():
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
     index_df = df_results.loc[0, "index_df"]
+    numero_client = df_results.loc[0, "client"]
     val = request.form.get("data_value")
     titre = ""
     unite = ""
