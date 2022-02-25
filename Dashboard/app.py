@@ -88,6 +88,7 @@ def predict():
 
 
 def lime_data():
+    index_df = df_results.loc[0, "index_df"]
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -175,7 +176,6 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
-    print(df_results.loc[0, 'TARGET'])
     val = request.form.get("data_value")
     titre = ""
     unite = ""
