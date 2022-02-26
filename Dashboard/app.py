@@ -11,8 +11,6 @@ app = Flask(__name__)
 model = pickle.load(open('data/best_pipes.pkl', 'rb'))
 model_lime = pickle.load(open('data/model_lime.pkl', 'rb'))
 
-df_results = pd.read_csv("data/Results.csv")
-
 pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb'))
 X_test = pickle.load(open('data/X_test.pkl', 'rb'))
 y_test = pickle.load(open('data/y_test.pkl', 'rb'))
@@ -25,6 +23,24 @@ X_test_lime = pipeline_lime.transform(X_test)
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
+def lire_data_clients():
+    df_results = pd.read_csv("data/Results.csv", index_col=[0])
+    numero_client = df_results.loc[0, "numero_client"]
+    index_df = df_results.loc[0, "index_df"]
+    age = df_results.loc[0, "age"]
+    genre = df_results.loc[0, "genre"]
+    return numero_client, index_df, age, genre
+
+def ecrire_data_clients(numero_client, index_df, age, genre):
+    df_results = pd.read_csv("data/Results.csv", index_col=[0])
+    df_results.loc[0, "numero_client"] = numero_client
+    df_results.loc[0, "index_df"] = index_df
+    df_results.loc[0, "age"]= age
+    df_results.loc[0, "genre"] = genre
+    df_results.to_csv("data/Results.csv")
+
+
+numero_client, index_df, age, genre = lire_data_clients()
 
 @app.route('/')
 def home():
@@ -35,7 +51,7 @@ def home():
 
 @app.route('/dashboard/', methods=['POST'])
 def dashboard():
-    global numero_client, age, genre, index_df
+    #global numero_client, age, genre, index_df
 
     numero_client = request.form.get("Numéro de dossier")
     numero_client = int(numero_client)
@@ -45,16 +61,12 @@ def dashboard():
     age = int(X_test.loc[index_df, 'DAYS_BIRTH']/(-365))
     code_genre = X_test.loc[index_df, 'CODE_GENDER']
 
-    df_results.loc[0,"client"] = numero_client
-    df_results.loc[0, "index_df"] = index_df
-
-    print('Dashboard')
-    print(index_df)
-
     if code_genre == 0:
         genre = "Homme"
     else:
         genre = "Femme"
+
+    ecrire_data_clients(numero_client, index_df, age, genre)
 
     return render_template('dashboard.html',
                            client_number=numero_client,
@@ -65,12 +77,14 @@ def dashboard():
 @app.route('/results/', methods=['POST'])
 def predict():
     global score
+    numero_client, index_df, age, genre = lire_data_clients()
+    #index_df = df_results.loc[0, "index_df"]
+    #age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
+    #numero_client = df_results.loc[0, "client"]
+    #genre = df_results.loc[0, "genre"]
+    print('predict')
+    print(numero_client)
 
-    index_df = df_results.loc[0, "index_df"]
-    age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
-    numero_client = df_results.loc[0, "client"]
-    genre = df_results.loc[0, "genre"]
-    print(index_df)
     prediction = model.predict_proba(X_test)[index_df][0]
 
     #prediction = model.predict_proba(X_test)[index_df][0]
@@ -92,9 +106,12 @@ def predict():
 
 
 def lime_data():
-    index_df = df_results.loc[0, "index_df"]
-    numero_client = df_results.loc[0, "client"]
-    genre = numero_client = df_results.loc[0, "genre"]
+    #index_df = df_results.loc[0, "index_df"]
+    #numero_client = df_results.loc[0, "client"]
+    #genre = numero_client = df_results.loc[0, "genre"]
+    numero_client, index_df, age, genre = lire_data_clients()
+    print('lime data')
+    print(numero_client)
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -109,6 +126,9 @@ def lime_data():
 
 @app.route('/LIME/', methods=['POST'])
 def lime_plot():
+    numero_client, index_df, age, genre = lire_data_clients()
+    print('lime plot')
+    print(numero_client)
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     html_data = explanation.as_html()
 
@@ -121,6 +141,9 @@ def lime_plot():
 @app.route('/API/radar/')
 def def_radar():
     global data_radar
+    numero_client, index_df, age, genre = lire_data_clients()
+    print('api radar')
+    print(numero_client)
     data_radar, liste_radar_specifique = lime_data()
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
@@ -173,6 +196,9 @@ def def_radar():
 
 @app.route('/RADAR/', methods=['POST'])
 def plot_radar():
+    numero_client, index_df, age, genre = lire_data_clients()
+    print('plot radar')
+    print(numero_client)
     return render_template('dashboard.html',
                            OK_radar='OK',
                            client_number=numero_client,
@@ -182,11 +208,14 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
-    index_df = df_results.loc[0, "index_df"]
-    numero_client = df_results.loc[0, "client"]
-    genre = numero_client = df_results.loc[0, "genre"]
-    age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
+    #index_df = df_results.loc[0, "index_df"]
+    #numero_client = df_results.loc[0, "client"]
+    #genre = numero_client = df_results.loc[0, "genre"]
+    #age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
     val = request.form.get("data_value")
+    numero_client, index_df, age, genre = lire_data_clients()
+    print('histo')
+    print(numero_client)
     titre = ""
     unite = ""
 
