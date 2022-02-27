@@ -13,12 +13,15 @@ model_lime = pickle.load(open('data/model_lime.pkl', 'rb'))
 
 pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb'))
 X_test = pickle.load(open('data/X_test.pkl', 'rb'))
+X_test = X_test.loc[:20,:]
+print(X_test)
 y_test = pickle.load(open('data/y_test.pkl', 'rb'))
 y_pred = model.predict(X_test)
 
 features_lime = pickle.load(open('data/features_lime.pkl', 'rb'))
 
 X_test_lime = pipeline_lime.transform(X_test)
+X_test_lime_df = pd.DataFrame(data=X_test_lime, columns=features_lime)
 
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
@@ -106,9 +109,6 @@ def predict():
 
 
 def lime_data():
-    #index_df = df_results.loc[0, "index_df"]
-    #numero_client = df_results.loc[0, "client"]
-    #genre = numero_client = df_results.loc[0, "genre"]
     numero_client, index_df, age, genre = lire_data_clients()
     print('lime data')
     print(numero_client)
@@ -144,10 +144,13 @@ def def_radar():
     numero_client, index_df, age, genre = lire_data_clients()
     print('api radar')
     print(numero_client)
-    data_radar, liste_radar_specifique = lime_data()
+    #data_radar, liste_radar_specifique = lime_data()
+    data_radar = X_test_lime_df.copy()
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
+
+    liste_radar_specifique = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
     liste_radar = liste_radar_specifique + liste_radar_general
     liste_radar = list(OrderedDict.fromkeys(liste_radar))
     data_radar['TARGET'] = y_pred
@@ -284,4 +287,4 @@ def histo_plot():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True)
+    app.run(debug=True)
