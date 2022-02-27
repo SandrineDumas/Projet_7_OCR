@@ -144,13 +144,13 @@ def def_radar():
     numero_client, index_df, age, genre = lire_data_clients()
     print('api radar')
     print(numero_client)
-    #data_radar, liste_radar_specifique = lime_data()
-    data_radar = X_test_lime_df.copy()
+    data_radar, liste_radar_specifique = lime_data()
+    #data_radar = X_test_lime_df.copy()
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
 
-    liste_radar_specifique = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
+    #liste_radar_specifique = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
     liste_radar = liste_radar_specifique + liste_radar_general
     liste_radar = list(OrderedDict.fromkeys(liste_radar))
     data_radar['TARGET'] = y_pred
@@ -252,7 +252,7 @@ def histo_plot():
 
     data_histo = X_test.copy()
     data_histo['TARGET'] = y_pred
-    data_histo['AMT_INCOME_TOTAL'] = data_histo['AMT_ANNUITY']/data_histo['ANNUITY_INCOME_PERC']
+    #data_histo['AMT_INCOME_TOTAL'] = data_histo['AMT_ANNUITY']/data_histo['ANNUITY_INCOME_PERC']
     data_histo['DAYS_BIRTH'] = data_histo['DAYS_BIRTH']/(-365)
     data_histo['DAYS_EMPLOYED'] = data_histo['DAYS_EMPLOYED'] / (-365)
     data_histo['DAYS_ID_PUBLISH'] = data_histo['DAYS_ID_PUBLISH'] / (-365)
