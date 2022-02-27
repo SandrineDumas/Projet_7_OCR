@@ -13,7 +13,7 @@ model_lime = pickle.load(open('data/model_lime.pkl', 'rb'))
 
 pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb'))
 X_test = pickle.load(open('data/X_test.pkl', 'rb'))
-X_test = X_test.loc[:20,:]
+#X_test = X_test.loc[:20,:]
 print(X_test)
 y_test = pickle.load(open('data/y_test.pkl', 'rb'))
 y_pred = model.predict(X_test)
