@@ -21,6 +21,7 @@
 </head>
 
 <body>
+    <!-- Données présentes dans le haut de la page du dashboard-->
     <div id = "container01" >
         <h3>
             Numéro de dossier : {{ client_number }}<br>
@@ -31,6 +32,7 @@
         </h5>
     </div>
 
+    <!-- Boutons du menu-->
     <form action="{{ url_for('home')}}">
         <button id="Home" class="btn btn-outline-secondary" >Accueil</button>
     </form>
@@ -61,6 +63,7 @@
 
 
     {% if OK_pred=='OK'%}
+    <!-- Menu 1 : score et présentation avec jauge-->
         <br>
         <br>
         <br>
@@ -162,6 +165,7 @@
 
 
     {% if exp %}
+    <!-- Menu 2 : explications avec Lime-->
         <div id = "container03" >
         <h6 align="top" >
         <br />
@@ -176,6 +180,7 @@
     {% endif %}
 
     {% if OK_radar=='OK'%}
+    <!-- Menu 3 : deux radars-->
         <div id = "container04" >
         <h6 align="top" >
              <br />
@@ -194,6 +199,7 @@
 
 
     {% if OK_histo=='OK'%}
+    <!-- Menu 4 : histogramme avec choix-->
         <div class = "container05" >
         <h6>
             <br />

@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template, url_for
-from flask import g
+import requests
+import json
 import pickle
 import dill
 import pandas as pd
@@ -8,24 +9,30 @@ import math
 
 app = Flask(__name__)
 
+# Lecture des diférentes données nécessaires au fonctionnement du dashboard
+# pipeline du modèle de ML utilisé
 model = pickle.load(open('data/best_pipes.pkl', 'rb'))
+
+# Pour utiliser Lime, le pipeline doit être diviser en deux : pipeline_lime et model_lime
+pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb')) #
 model_lime = pickle.load(open('data/model_lime.pkl', 'rb'))
-
-pipeline_lime = pickle.load(open('data/pipeline_lime.pkl', 'rb'))
-X_test = pickle.load(open('data/X_test.pkl', 'rb'))
-#X_test = X_test.loc[:20,:]
-print(X_test)
-y_test = pickle.load(open('data/y_test.pkl', 'rb'))
-y_pred = model.predict(X_test)
-
 features_lime = pickle.load(open('data/features_lime.pkl', 'rb'))
 
-X_test_lime = pipeline_lime.transform(X_test)
-X_test_lime_df = pd.DataFrame(data=X_test_lime, columns=features_lime)
-
+# Explainer est le modèle qui retourne les prédictions Lime
 with open('data/explainer', 'rb') as f:
     explainer = dill.load(f)
 
+# Dataframe des données clients
+X_test = pickle.load(open('data/X_test.pkl', 'rb'))
+
+# Calcul de y_pred
+y_pred = model.predict(X_test)
+
+# Transformation du dataframe X_test pour être  utilisé par Lime
+X_test_lime = pipeline_lime.transform(X_test)
+X_test_lime_df = pd.DataFrame(data=X_test_lime, columns=features_lime)
+
+# Fonction qui lit les données du client sélectionné dans un fichier CSV
 def lire_data_clients():
     df_results = pd.read_csv("data/Results.csv", index_col=[0])
     numero_client = df_results.loc[0, "numero_client"]
@@ -34,6 +41,7 @@ def lire_data_clients():
     genre = df_results.loc[0, "genre"]
     return numero_client, index_df, age, genre
 
+# Fonction qui écrit les données du client sélectionné dans un fichier CSV
 def ecrire_data_clients(numero_client, index_df, age, genre):
     df_results = pd.read_csv("data/Results.csv", index_col=[0])
     df_results.loc[0, "numero_client"] = numero_client
@@ -45,8 +53,35 @@ def ecrire_data_clients(numero_client, index_df, age, genre):
 
 numero_client, index_df, age, genre = lire_data_clients()
 
+
+@app.route('/API/score/<numero_client>')
+def API_pred(numero_client):
+    # API qui retourne le score d'un client donné
+    numero_client = int(numero_client)
+
+    index_df = X_test[X_test['SK_ID_CURR'] == numero_client].index[0]
+
+    prediction = model.predict_proba(X_test)[index_df][0]
+
+    if prediction >= 0.55:
+        score = "Accordé"
+    elif prediction < 0.55 and prediction >= 0.45:
+        score = "Défavorable - Dossier à revalider"
+    else:
+        score = "Refusé"
+
+    pred = round(prediction * 100, 2)
+
+    return jsonify({
+        'prediction': pred,
+        'score': score
+    })
+
+
 @app.route('/')
 def home():
+    # Accueil du dashboard
+    # Envoi de la liste des clients disponibles pour choisir un client lambda
     clients = X_test['SK_ID_CURR'].sort_values(ascending=False).to_list()
     return render_template('index.html', clients=clients,
                                         logo=url_for('static', filename='img/Logo.jpg'))
@@ -54,8 +89,8 @@ def home():
 
 @app.route('/dashboard/', methods=['POST'])
 def dashboard():
-    #global numero_client, age, genre, index_df
-
+    # A partir du numéro de client sélectionné sur la page d'accueil,
+    # la fonction sauvegarde et retourne des données nécessaires pour réaliser les différents calculs pour le dashboard
     numero_client = request.form.get("Numéro de dossier")
     numero_client = int(numero_client)
 
@@ -77,27 +112,18 @@ def dashboard():
                            genre=genre)
 
 
-@app.route('/results/', methods=['POST'])
+@app.route('/results/', methods=['GET', 'POST'])
 def predict():
-    global score
+    # Récupération du score prédit pour le client
     numero_client, index_df, age, genre = lire_data_clients()
-    #index_df = df_results.loc[0, "index_df"]
-    #age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
-    #numero_client = df_results.loc[0, "client"]
-    #genre = df_results.loc[0, "genre"]
-    print('predict')
-    print(numero_client)
 
-    prediction = model.predict_proba(X_test)[index_df][0]
+    url_predict_client = "https://scoring-ocr-projet7-api.herokuapp.com/API/score/" + str(numero_client)
 
-    #prediction = model.predict_proba(X_test)[index_df][0]
+    response = requests.get(url=url_predict_client)
+    data_json = json.loads(response.text)
 
-    if prediction >= 0.55:
-        score = "Accordé"
-    elif prediction < 0.55 and prediction >= 0.45:
-        score = "Défavorable - Dossier à revalider"
-    else:
-        score = "Refusé"
+    pred = data_json["prediction"]
+    score = data_json["score"]
 
     return render_template('dashboard.html',
                            OK_pred='OK',
@@ -105,13 +131,12 @@ def predict():
                            age='{} ans'.format(age),
                            genre=genre,
                            prediction_text='Prêt : {}'.format(score),
-                           pred=round(prediction * 100, 2))
+                           pred=pred)
 
 
 def lime_data():
+    # Fonction qui retourne un dataframe et une liste pour l'API radars
     numero_client, index_df, age, genre = lire_data_clients()
-    print('lime data')
-    print(numero_client)
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     liste_features_LIME = explanation.as_map()[1]
     features_explained_LIME = []
@@ -126,9 +151,8 @@ def lime_data():
 
 @app.route('/LIME/', methods=['POST'])
 def lime_plot():
+    # Création de la visualisation Lime, onglet "Détails clients"
     numero_client, index_df, age, genre = lire_data_clients()
-    print('lime plot')
-    print(numero_client)
     explanation = explainer.explain_instance(X_test_lime[index_df], model_lime.predict_proba, num_features=20)
     html_data = explanation.as_html()
 
@@ -140,17 +164,15 @@ def lime_plot():
 
 @app.route('/API/radar/')
 def def_radar():
+    # Création des données au format json pour l'API (pour les radars plot)
     global data_radar
+
     numero_client, index_df, age, genre = lire_data_clients()
-    print('api radar')
-    print(numero_client)
+
     data_radar, liste_radar_specifique = lime_data()
-    #data_radar = X_test_lime_df.copy()
 
     liste_radar_general = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
 
-
-    #liste_radar_specifique = ['EXT_SOURCE_2', 'EXT_SOURCE_3', 'EXT_SOURCE_1', 'AMT_ANNUITY', 'PAYMENT_RATE']
     liste_radar = liste_radar_specifique + liste_radar_general
     liste_radar = list(OrderedDict.fromkeys(liste_radar))
     data_radar['TARGET'] = y_pred
@@ -160,12 +182,12 @@ def def_radar():
     target_radar = data_radar.groupby('TARGET').median()
     target_radar = target_radar.reset_index()
 
-    # New scale should be from 0 to 100.
+    # Nouvelle échelle de 0 à 100
     new_max = 100
     new_min = 0
     new_range = new_max - new_min
 
-    # Do a linear transformation on each variable to change value to [0, 100].
+    # Transformation linéaire de chaque variablepour être dans [0, 100]
     for factor in liste_radar:
         max_val = data_radar[factor].max()
         min_val = data_radar[factor].min()
@@ -199,9 +221,9 @@ def def_radar():
 
 @app.route('/RADAR/', methods=['POST'])
 def plot_radar():
+    # Fonction qui retourne un mot clé pour dessiner les radars sur le dashboard
     numero_client, index_df, age, genre = lire_data_clients()
-    print('plot radar')
-    print(numero_client)
+
     return render_template('dashboard.html',
                            OK_radar='OK',
                            client_number=numero_client,
@@ -211,14 +233,10 @@ def plot_radar():
 
 @app.route('/HISTO/', methods=['POST'])
 def histo_plot():
-    #index_df = df_results.loc[0, "index_df"]
-    #numero_client = df_results.loc[0, "client"]
-    #genre = numero_client = df_results.loc[0, "genre"]
-    #age = int(X_test.loc[index_df, 'DAYS_BIRTH'] / (-365))
+    # Fonction qui retourne les données pour dessiner un histogramme à partir d'une caractéristique choisie
     val = request.form.get("data_value")
     numero_client, index_df, age, genre = lire_data_clients()
-    print('histo')
-    print(numero_client)
+
     titre = ""
     unite = ""
 
@@ -252,11 +270,9 @@ def histo_plot():
 
     data_histo = X_test.copy()
     data_histo['TARGET'] = y_pred
-    #data_histo['AMT_INCOME_TOTAL'] = data_histo['AMT_ANNUITY']/data_histo['ANNUITY_INCOME_PERC']
     data_histo['DAYS_BIRTH'] = data_histo['DAYS_BIRTH']/(-365)
     data_histo['DAYS_EMPLOYED'] = data_histo['DAYS_EMPLOYED'] / (-365)
     data_histo['DAYS_ID_PUBLISH'] = data_histo['DAYS_ID_PUBLISH'] / (-365)
-    data_histo['DAYS_LAST_PHONE_CHANGE'] = data_histo['DAYS_LAST_PHONE_CHANGE'] / (-365)
 
     data_histo_yes = data_histo[data_histo['TARGET'] == 0][val].to_list()
     data_histo_no = data_histo[data_histo['TARGET'] == 1][val].to_list()
