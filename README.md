@@ -1,10 +1,12 @@
 # Projet 7 - Implémentez un modèle de scoring
 ***
+
 Projet 7 de la formation Data Scientist dispensée par OpenClassRooms.
 
 
 ## But du projet : 
 ***
+
 Le but du projet est de développer un dashboard interactif fournissant un score d'accord de prêt pour les clients
 
 Le projet est décomposé en deux parties :
@@ -21,6 +23,7 @@ Le projet est décomposé en deux parties :
 
 ## Compétences évaluées :
 ***
+
 - Présenter son travail de modélisation à l'oral
 - Réaliser un dashboard pour présenter son travail de modélisation
 - Rédiger une note méthodologique afin de communiquer sa démarche de modélisation
@@ -30,6 +33,7 @@ Le projet est décomposé en deux parties :
 
 ## Données :
 ***
+
 Les données proviennent du site de kaggle : https://www.kaggle.com/c/home-credit-default-risk/data
 
 La partie feature engineering est issue de : https://www.kaggle.com/jsaguiar/lightgbm-with-simple-features
